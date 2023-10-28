@@ -7,9 +7,9 @@ import (
 	repository "example/connectify/app/repository"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5/pgconn"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -45,13 +45,7 @@ func (u UserDetailServiceImpl) AddUserData(c *gin.Context) {
 	userID, _ := strconv.Atoi(c.Param("userID"))
 	request.UserID = userID
 
-	data, err := u.UserDetailRepository.FindUserById(userID)
-	if err != nil {
-		log.Error("Error happened when getting data from database. Error", err)
-		pkg.PanicException(constant.DataNotFound)
-	}
-
-	err = c.Request.ParseForm()
+	err := c.Request.ParseForm()
 	if err != nil {
 		log.Error("Error happened when mapping request from FE. Error", err)
 		pkg.PanicException(constant.InvalidRequest)
@@ -59,10 +53,7 @@ func (u UserDetailServiceImpl) AddUserData(c *gin.Context) {
 
 	request.Name = c.PostForm("name")
 	request.Description = c.PostForm("description")
-	layout := "2006-01-02T15:04:05-0700"
-	birthdayString := c.PostForm("birthday")
-	parsedBirthday, err := time.Parse(layout, birthdayString)
-	request.Birthday = parsedBirthday
+	request.Birthday, err = pkg.ParseTime(c.PostForm("birthday"))
 	if err != nil {
 		log.Error("Error happened in date", err)
 		pkg.PanicException(constant.InvalidRequest)
@@ -71,7 +62,7 @@ func (u UserDetailServiceImpl) AddUserData(c *gin.Context) {
 
 	if err == nil {
 		// Save the uploaded file to the server
-		url := "public/images/" + file.Filename
+		url := "public/images/user/" + file.Filename
 		err = c.SaveUploadedFile(file, url)
 		if err != nil {
 			pkg.PanicException(constant.UnknownError)
@@ -81,10 +72,14 @@ func (u UserDetailServiceImpl) AddUserData(c *gin.Context) {
 		request.PhotoUrl = url
 	}
 
-	data, err = u.UserDetailRepository.Save(&request)
+	data, err := u.UserDetailRepository.Save(&request)
 	if err != nil {
 		log.Error("Error happened when saving data to database. Error", err)
-		pkg.PanicException(constant.UnknownError)
+		if err != nil {
+			if pkg.HandleError(err.(*pgconn.PgError), c) {
+				return
+			}
+		}
 	}
 	log.Info("request ", request.Name, request.Description, request.Birthday, request.PhotoUrl)
 

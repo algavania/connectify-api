@@ -29,7 +29,13 @@ func (u UserDetailRepositoryImpl) FindUserById(id int) (dao.UserDetail, error) {
 }
 
 func (u UserDetailRepositoryImpl) Save(user *dao.UserDetail) (dao.UserDetail, error) {
-	var err = u.db.Save(user).Error
+	data, err := u.FindUserById(user.UserID)
+	if err != nil {
+		err = u.db.Create(user).Error
+	} else {
+		user.CreatedAt = data.CreatedAt
+		err = u.db.Updates(user).Error
+	}
 	if err != nil {
 		log.Error("Got an error when save user detail. Error: ", err)
 		return dao.UserDetail{}, err

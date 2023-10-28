@@ -58,11 +58,16 @@ func ConvertConstraintName(str string) string {
 }
 
 func HandleError(error *pgconn.PgError, c *gin.Context) bool {
-	if error.Code == "23505" {
+	switch error.Code {
+	case "23503":
+		PanicException(constant.DataNotFound)
+		return true
+	case "23505":
 		c.JSON(http.StatusBadRequest, BuildResponse_("DUPLICATED_FIELD", ConvertConstraintName(error.ConstraintName)+" already exist", Null()))
 		return true
-	} else {
+	default:
 		PanicException(constant.UnknownError)
 		return false
+
 	}
 }
