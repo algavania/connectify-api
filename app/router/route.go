@@ -22,7 +22,6 @@ func Init(init *config.Initialization) *gin.Engine {
 
 		userDetail := api.Group("/user-detail")
 		userDetail.POST("/:userID", init.UserDetailCtrl.AddUserData)
-		userDetail.PUT("/:userID", init.UserDetailCtrl.UpdateUserData)
 		userDetail.GET("/:userID", init.UserDetailCtrl.GetUserById)
 
 	}
