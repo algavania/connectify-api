@@ -26,7 +26,10 @@ func Init() *Initialization {
 	postRepositoryImpl := repository.PostRepositoryInit(gormDB)
 	postServiceImpl := service.PostServiceInit(postRepositoryImpl)
 	postControllerImpl := controller.PostControllerInit(postServiceImpl)
-	initialization := NewInitialization(userRepositoryImpl, userServiceImpl, userControllerImpl, userDetailRepositoryImpl, userDetailServiceImpl, userDetailControllerImpl, postRepositoryImpl, postServiceImpl, postControllerImpl)
+	chatRepositoryImpl := repository.ChatRepositoryInit(gormDB)
+	chatServiceImpl := service.ChatServiceInit(chatRepositoryImpl)
+	chatControllerImpl := controller.ChatControllerInit(chatServiceImpl)
+	initialization := NewInitialization(userRepositoryImpl, userServiceImpl, userControllerImpl, userDetailRepositoryImpl, userDetailServiceImpl, userDetailControllerImpl, postRepositoryImpl, postServiceImpl, postControllerImpl, chatRepositoryImpl, chatServiceImpl, chatControllerImpl)
 	return initialization
 }
 
@@ -51,3 +54,9 @@ var postServiceSet = wire.NewSet(service.PostServiceInit, wire.Bind(new(service.
 var postRepoSet = wire.NewSet(repository.PostRepositoryInit, wire.Bind(new(repository.PostRepository), new(*repository.PostRepositoryImpl)))
 
 var postCtrlSet = wire.NewSet(controller.PostControllerInit, wire.Bind(new(controller.PostController), new(*controller.PostControllerImpl)))
+
+var chatServiceSet = wire.NewSet(service.ChatServiceInit, wire.Bind(new(service.ChatService), new(*service.ChatServiceImpl)))
+
+var chatRepoSet = wire.NewSet(repository.ChatRepositoryInit, wire.Bind(new(repository.ChatRepository), new(*repository.ChatRepositoryImpl)))
+
+var chatCtrlSet = wire.NewSet(controller.ChatControllerInit, wire.Bind(new(controller.ChatController), new(*controller.ChatControllerImpl)))

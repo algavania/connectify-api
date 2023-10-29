@@ -12,5 +12,6 @@ type ChatMessage struct {
 	UserID  int       `gorm:"column:user_id;" json:"user_id"`
 	User    user.User `gorm:"foreignkey:UserID;constraint:OnDelete:CASCADE;" json:"-"`
 	Content string    `gorm:"column:content;" json:"content"`
+	Media   string    `gorm:"column:media;" json:"media"`
 	dao.BaseModel
 }

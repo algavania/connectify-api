@@ -29,6 +29,18 @@ func Init(init *config.Initialization) *gin.Engine {
 		post.GET("/:postID", init.PostCtrl.GetPostById)
 		post.PUT("/:postID", init.PostCtrl.UpdatePostData)
 		post.DELETE("/:postID", init.PostCtrl.DeletePost)
+
+		chat := api.Group("/chat")
+		chat.POST("", init.ChatCtrl.AddChatData)
+		chat.GET("/:chatID", init.ChatCtrl.GetChatById)
+		chat.PUT("/:chatID", init.ChatCtrl.UpdateChatData)
+		chat.DELETE("/:chatID", init.ChatCtrl.DeleteChat)
+
+		chat.POST("/:chatID/participant", init.ChatCtrl.AddParticipant)
+		chat.DELETE("/:chatID/participant", init.ChatCtrl.DeleteParticipant)
+
+		chat.POST("/:chatID/message", init.ChatCtrl.AddMessage)
+		chat.DELETE("/:chatID/message/:messageID", init.ChatCtrl.DeleteMessage)
 	}
 
 	return router

@@ -16,6 +16,9 @@ type Initialization struct {
 	postRepo       repository.PostRepository
 	postSvc        service.PostService
 	PostCtrl       controller.PostController
+	chatRepo       repository.ChatRepository
+	chatSvc        service.ChatService
+	ChatCtrl       controller.ChatController
 }
 
 func NewInitialization(
@@ -28,6 +31,9 @@ func NewInitialization(
 	postRepo repository.PostRepository,
 	postService service.PostService,
 	postCtrl controller.PostController,
+	chatRepo repository.ChatRepository,
+	chatService service.ChatService,
+	chatCtrl controller.ChatController,
 ) *Initialization {
 	return &Initialization{
 		userRepo:       userRepo,
@@ -39,5 +45,8 @@ func NewInitialization(
 		postRepo:       postRepo,
 		postSvc:        postService,
 		PostCtrl:       postCtrl,
+		chatRepo:       chatRepo,
+		chatSvc:        chatService,
+		ChatCtrl:       chatCtrl,
 	}
 }
