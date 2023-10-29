@@ -11,6 +11,7 @@ type UserController interface {
 	GetUserById(c *gin.Context)
 	UpdateUserData(c *gin.Context)
 	DeleteUser(c *gin.Context)
+	Login(c *gin.Context)
 }
 
 type UserControllerImpl struct {
@@ -31,6 +32,10 @@ func (u UserControllerImpl) UpdateUserData(c *gin.Context) {
 
 func (u UserControllerImpl) DeleteUser(c *gin.Context) {
 	u.svc.DeleteUser(c)
+}
+
+func (u UserControllerImpl) Login(c *gin.Context) {
+	u.svc.Login(c)
 }
 
 func UserControllerInit(userService service.UserService) *UserControllerImpl {

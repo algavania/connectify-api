@@ -19,6 +19,7 @@ type UserService interface {
 	AddUserData(c *gin.Context)
 	UpdateUserData(c *gin.Context)
 	DeleteUser(c *gin.Context)
+	Login(c *gin.Context)
 }
 
 type UserServiceImpl struct {
@@ -87,8 +88,12 @@ func (u UserServiceImpl) AddUserData(c *gin.Context) {
 	data, err := u.userRepository.Save(&request)
 	if err != nil {
 		log.Error("Error happened when saving data to database. Error", err)
-		if pkg.HandleError(err.(*pgconn.PgError), c) {
-			return
+		if pgErr, ok := err.(*pgconn.PgError); ok {
+			if pkg.HandleError(pgErr, c) {
+				return
+			}
+		} else {
+			pkg.PanicException(constant.UnknownError)
 		}
 	}
 
@@ -108,6 +113,41 @@ func (u UserServiceImpl) DeleteUser(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, pkg.BuildResponse(constant.Success, pkg.Null()))
+}
+
+func (u UserServiceImpl) Login(c *gin.Context) {
+	defer pkg.PanicHandler(c)
+
+	log.Info("start to execute program login user")
+	var request dao.User
+	if err := c.ShouldBindJSON(&request); err != nil {
+		log.Error("Error happened when mapping request from FE. Error", err)
+		pkg.PanicException(constant.InvalidRequest)
+	}
+
+	user, err := u.userRepository.FindUserByEmail(request.Email)
+	if err != nil {
+		log.Error("Error happened when getting user from DB. Error:", err)
+		pkg.PanicException(constant.UnknownError)
+	}
+
+	log.Info("hashed password", user.Password)
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(request.Password)); err != nil {
+		log.Error("Error happened when comparing password. Error:", err)
+		pkg.PanicException(constant.InvalidRequest)
+	}
+
+	tokenString, err := pkg.GenerateToken(user.ID)
+	if err != nil {
+		log.Error("Error happened when signing token. Error:", err)
+		pkg.PanicException(constant.UnknownError)
+	}
+
+	c.JSON(http.StatusOK, pkg.BuildResponse(constant.Success, gin.H{
+		"token": tokenString,
+		"user":  user,
+	}))
 }
 
 func UserServiceInit(userRepository repository.UserRepository) *UserServiceImpl {
