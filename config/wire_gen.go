@@ -29,7 +29,10 @@ func Init() *Initialization {
 	chatRepositoryImpl := repository.ChatRepositoryInit(gormDB)
 	chatServiceImpl := service.ChatServiceInit(chatRepositoryImpl)
 	chatControllerImpl := controller.ChatControllerInit(chatServiceImpl)
-	initialization := NewInitialization(userRepositoryImpl, userServiceImpl, userControllerImpl, userDetailRepositoryImpl, userDetailServiceImpl, userDetailControllerImpl, postRepositoryImpl, postServiceImpl, postControllerImpl, chatRepositoryImpl, chatServiceImpl, chatControllerImpl)
+	userFollowingRepositoryImpl := repository.UserFollowingRepositoryInit(gormDB)
+	userFollowingServiceImpl := service.UserFollowingServiceInit(userFollowingRepositoryImpl)
+	userFollowingControllerImpl := controller.UserFollowingControllerInit(userFollowingServiceImpl)
+	initialization := NewInitialization(userRepositoryImpl, userServiceImpl, userControllerImpl, userDetailRepositoryImpl, userDetailServiceImpl, userDetailControllerImpl, postRepositoryImpl, postServiceImpl, postControllerImpl, chatRepositoryImpl, chatServiceImpl, chatControllerImpl, userFollowingRepositoryImpl, userFollowingServiceImpl, userFollowingControllerImpl)
 	return initialization
 }
 
@@ -60,3 +63,9 @@ var chatServiceSet = wire.NewSet(service.ChatServiceInit, wire.Bind(new(service.
 var chatRepoSet = wire.NewSet(repository.ChatRepositoryInit, wire.Bind(new(repository.ChatRepository), new(*repository.ChatRepositoryImpl)))
 
 var chatCtrlSet = wire.NewSet(controller.ChatControllerInit, wire.Bind(new(controller.ChatController), new(*controller.ChatControllerImpl)))
+
+var userFollowingServiceSet = wire.NewSet(service.UserFollowingServiceInit, wire.Bind(new(service.UserFollowingService), new(*service.UserFollowingServiceImpl)))
+
+var userFollowingRepoSet = wire.NewSet(repository.UserFollowingRepositoryInit, wire.Bind(new(repository.UserFollowingRepository), new(*repository.UserFollowingRepositoryImpl)))
+
+var userFollowingCtrlSet = wire.NewSet(controller.UserFollowingControllerInit, wire.Bind(new(controller.UserFollowingController), new(*controller.UserFollowingControllerImpl)))

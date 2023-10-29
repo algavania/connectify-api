@@ -62,6 +62,18 @@ var chatCtrlSet = wire.NewSet(controller.ChatControllerInit,
 	wire.Bind(new(controller.ChatController), new(*controller.ChatControllerImpl)),
 )
 
+var userFollowingServiceSet = wire.NewSet(service.UserFollowingServiceInit,
+	wire.Bind(new(service.UserFollowingService), new(*service.UserFollowingServiceImpl)),
+)
+
+var userFollowingRepoSet = wire.NewSet(repository.UserFollowingRepositoryInit,
+	wire.Bind(new(repository.UserFollowingRepository), new(*repository.UserFollowingRepositoryImpl)),
+)
+
+var userFollowingCtrlSet = wire.NewSet(controller.UserFollowingControllerInit,
+	wire.Bind(new(controller.UserFollowingController), new(*controller.UserFollowingControllerImpl)),
+)
+
 func Init() *Initialization {
 	wire.Build(
 		NewInitialization,
@@ -70,6 +82,7 @@ func Init() *Initialization {
 		userDetailCtrlSet, userDetailServiceSet, userDetailRepoSet,
 		postCtrlSet, postServiceSet, postRepoSet,
 		chatCtrlSet, chatServiceSet, chatRepoSet,
+		userFollowingCtrlSet, userFollowingServiceSet, userFollowingRepoSet,
 	)
 	return nil
 }

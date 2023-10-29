@@ -41,6 +41,12 @@ func Init(init *config.Initialization) *gin.Engine {
 
 		chat.POST("/:chatID/message", init.ChatCtrl.AddMessage)
 		chat.DELETE("/:chatID/message/:messageID", init.ChatCtrl.DeleteMessage)
+
+		userFollowing := api.Group("/user-following")
+		userFollowing.POST("", init.UserFollowingCtrl.Follow)
+		userFollowing.GET("/:userID", init.UserFollowingCtrl.GetUserFollowing)
+		userFollowing.GET("/:userID/followers", init.UserFollowingCtrl.GetUserFollowers)
+		userFollowing.DELETE("/:userID", init.UserFollowingCtrl.Unfollow)
 	}
 
 	return router
