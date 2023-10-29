@@ -11,6 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgconn"
 	log "github.com/sirupsen/logrus"
+	"path/filepath"
 )
 
 type UserDetailService interface {
@@ -61,8 +62,11 @@ func (u UserDetailServiceImpl) AddUserData(c *gin.Context) {
 	file, err := c.FormFile("file")
 
 	if err == nil {
+		if !pkg.IsImageFile(file) {
+			c.JSON(http.StatusBadRequest, pkg.BuildResponse_(constant.InvalidRequest.GetResponseStatus(), "File is not image", pkg.Null()))
+		}
 		// Save the uploaded file to the server
-		url := "public/images/user/" + file.Filename
+		url := "public/images/user/" + strconv.Itoa(request.UserID) + filepath.Ext(file.Filename)
 		err = c.SaveUploadedFile(file, url)
 		if err != nil {
 			pkg.PanicException(constant.UnknownError)

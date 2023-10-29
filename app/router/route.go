@@ -24,6 +24,11 @@ func Init(init *config.Initialization) *gin.Engine {
 		userDetail.POST("/:userID", init.UserDetailCtrl.AddUserData)
 		userDetail.GET("/:userID", init.UserDetailCtrl.GetUserById)
 
+		post := api.Group("/post")
+		post.POST("", init.PostCtrl.AddPostData)
+		post.GET("/:postID", init.PostCtrl.GetPostById)
+		post.PUT("/:postID", init.PostCtrl.UpdatePostData)
+		post.DELETE("/:postID", init.PostCtrl.DeletePost)
 	}
 
 	return router

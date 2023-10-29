@@ -13,6 +13,9 @@ type Initialization struct {
 	userDetailRepo repository.UserDetailRepository
 	userDetailSvc  service.UserDetailService
 	UserDetailCtrl controller.UserDetailController
+	postRepo       repository.PostRepository
+	postSvc        service.PostService
+	PostCtrl       controller.PostController
 }
 
 func NewInitialization(
@@ -22,6 +25,9 @@ func NewInitialization(
 	userDetailRepo repository.UserDetailRepository,
 	userDetailService service.UserDetailService,
 	UserDetailCtrl controller.UserDetailController,
+	postRepo repository.PostRepository,
+	postService service.PostService,
+	postCtrl controller.PostController,
 ) *Initialization {
 	return &Initialization{
 		userRepo:       userRepo,
@@ -30,5 +36,8 @@ func NewInitialization(
 		userDetailRepo: userDetailRepo,
 		userDetailSvc:  userDetailService,
 		UserDetailCtrl: UserDetailCtrl,
+		postRepo:       postRepo,
+		postSvc:        postService,
+		PostCtrl:       postCtrl,
 	}
 }

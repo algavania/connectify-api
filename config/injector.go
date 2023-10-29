@@ -38,12 +38,25 @@ var userDetailCtrlSet = wire.NewSet(controller.UserDetailControllerInit,
 	wire.Bind(new(controller.UserDetailController), new(*controller.UserDetailControllerImpl)),
 )
 
+var postServiceSet = wire.NewSet(service.PostServiceInit,
+	wire.Bind(new(service.PostService), new(*service.PostServiceImpl)),
+)
+
+var postRepoSet = wire.NewSet(repository.PostRepositoryInit,
+	wire.Bind(new(repository.PostRepository), new(*repository.PostRepositoryImpl)),
+)
+
+var postCtrlSet = wire.NewSet(controller.PostControllerInit,
+	wire.Bind(new(controller.PostController), new(*controller.PostControllerImpl)),
+)
+
 func Init() *Initialization {
 	wire.Build(
 		NewInitialization,
 		db,
 		userCtrlSet, userServiceSet, userRepoSet,
 		userDetailCtrlSet, userDetailServiceSet, userDetailRepoSet,
+		postCtrlSet, postServiceSet, postRepoSet,
 	)
 	return nil
 }

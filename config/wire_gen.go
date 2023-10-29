@@ -23,7 +23,10 @@ func Init() *Initialization {
 	userDetailRepositoryImpl := repository.UserDetailRepositoryInit(gormDB)
 	userDetailServiceImpl := service.UserDetailServiceInit(userDetailRepositoryImpl)
 	userDetailControllerImpl := controller.UserDetailControllerInit(userDetailServiceImpl)
-	initialization := NewInitialization(userRepositoryImpl, userServiceImpl, userControllerImpl, userDetailRepositoryImpl, userDetailServiceImpl, userDetailControllerImpl)
+	postRepositoryImpl := repository.PostRepositoryInit(gormDB)
+	postServiceImpl := service.PostServiceInit(postRepositoryImpl)
+	postControllerImpl := controller.PostControllerInit(postServiceImpl)
+	initialization := NewInitialization(userRepositoryImpl, userServiceImpl, userControllerImpl, userDetailRepositoryImpl, userDetailServiceImpl, userDetailControllerImpl, postRepositoryImpl, postServiceImpl, postControllerImpl)
 	return initialization
 }
 
@@ -42,3 +45,9 @@ var userDetailServiceSet = wire.NewSet(service.UserDetailServiceInit, wire.Bind(
 var userDetailRepoSet = wire.NewSet(repository.UserDetailRepositoryInit, wire.Bind(new(repository.UserDetailRepository), new(*repository.UserDetailRepositoryImpl)))
 
 var userDetailCtrlSet = wire.NewSet(controller.UserDetailControllerInit, wire.Bind(new(controller.UserDetailController), new(*controller.UserDetailControllerImpl)))
+
+var postServiceSet = wire.NewSet(service.PostServiceInit, wire.Bind(new(service.PostService), new(*service.PostServiceImpl)))
+
+var postRepoSet = wire.NewSet(repository.PostRepositoryInit, wire.Bind(new(repository.PostRepository), new(*repository.PostRepositoryImpl)))
+
+var postCtrlSet = wire.NewSet(controller.PostControllerInit, wire.Bind(new(controller.PostController), new(*controller.PostControllerImpl)))
