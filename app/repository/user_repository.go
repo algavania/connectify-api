@@ -9,6 +9,7 @@ import (
 type UserRepository interface {
 	FindUserById(id int) (dao.User, error)
 	FindUserByEmail(email string) (dao.User, error)
+	FindUserByUsername(username string) (dao.User, error)
 	Save(user *dao.User) (dao.User, error)
 	DeleteUserById(id int) error
 }
@@ -36,6 +37,18 @@ func (u UserRepositoryImpl) FindUserByEmail(email string) (dao.User, error) {
 	err := u.db.Where("email = ?", email).First(&user).Error
 	if err != nil {
 		log.Error("Got and error when find user by email. Error: ", err)
+		return dao.User{}, err
+	}
+	return user, nil
+}
+
+func (u UserRepositoryImpl) FindUserByUsername(username string) (dao.User, error) {
+	user := dao.User{
+		Username: username,
+	}
+	err := u.db.Where("username = ?", username).First(&user).Error
+	if err != nil {
+		log.Error("Got and error when find user by username. Error: ", err)
 		return dao.User{}, err
 	}
 	return user, nil

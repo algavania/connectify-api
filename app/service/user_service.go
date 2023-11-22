@@ -85,6 +85,18 @@ func (u UserServiceImpl) AddUserData(c *gin.Context) {
 	hash, _ := bcrypt.GenerateFromPassword([]byte(request.Password), 15)
 	request.Password = string(hash)
 
+	email, _ := u.userRepository.FindUserByEmail(request.Email)
+	if email.Email != "" {
+		pkg.CustomPanicException(http.StatusBadRequest, "Email already exist", c)
+		return
+	}
+
+	username, _ := u.userRepository.FindUserByUsername(request.Username)
+	if username.Username != "" {
+		pkg.CustomPanicException(http.StatusBadRequest, "Username already exist", c)
+		return
+	}
+
 	data, err := u.userRepository.Save(&request)
 	if err != nil {
 		log.Error("Error happened when saving data to database. Error", err)
@@ -124,23 +136,39 @@ func (u UserServiceImpl) Login(c *gin.Context) {
 		log.Error("Error happened when mapping request from FE. Error", err)
 		pkg.PanicException(constant.InvalidRequest)
 	}
+	log.Info("request", request)
 
-	user, err := u.userRepository.FindUserByEmail(request.Email)
-	if err != nil {
-		log.Error("Error happened when getting user from DB. Error:", err)
+	if request.Email == "" || request.Password == "" {
+		var title = "Email"
+		if request.Password == "" {
+			title = "Password"
+		}
+		pkg.CustomPanicException(http.StatusBadRequest, title+" cannot be empty", c)
+		return
+	}
+
+	user, emailErr := u.userRepository.FindUserByEmail(request.Email)
+	if user.Email == "" {
+		pkg.CustomPanicException(http.StatusBadRequest, "Email not found", c)
+		return
+	}
+	if emailErr != nil {
+		log.Error("Error happened when getting user from DB. Error:", emailErr)
 		pkg.PanicException(constant.UnknownError)
 	}
 
-	log.Info("hashed password", user.Password)
+	log.Info("hashed password", user)
+	log.Info("request password", request.Password)
 
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(request.Password)); err != nil {
-		log.Error("Error happened when comparing password. Error:", err)
-		pkg.PanicException(constant.InvalidRequest)
+	if passwordErr := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(request.Password)); passwordErr != nil {
+		log.Error("Error happened when comparing password. Error:", passwordErr)
+		pkg.CustomPanicException(http.StatusBadRequest, "Wrong password", c)
+		return
 	}
 
-	tokenString, err := pkg.GenerateToken(user.ID)
-	if err != nil {
-		log.Error("Error happened when signing token. Error:", err)
+	tokenString, tokenErr := pkg.GenerateToken(user.ID)
+	if tokenErr != nil {
+		log.Error("Error happened when signing token. Error:", tokenErr)
 		pkg.PanicException(constant.UnknownError)
 	}
 

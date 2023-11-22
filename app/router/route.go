@@ -3,7 +3,7 @@ package router
 import (
 	"example/connectify/app/middlewares"
 	"example/connectify/config"
-
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -12,6 +12,11 @@ func Init(init *config.Initialization) *gin.Engine {
 	router := gin.New()
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
+
+	config := cors.DefaultConfig()
+	config.AllowAllOrigins = true
+	config.AllowHeaders = []string{"*"}
+	router.Use(cors.New(config))
 
 	api := router.Group("/api")
 	{
@@ -33,7 +38,9 @@ func Init(init *config.Initialization) *gin.Engine {
 		post := api.Group("/post")
 		post.Use(middlewares.JwtAuthMiddleware())
 		post.POST("", init.PostCtrl.AddPostData)
+		post.GET("", init.PostCtrl.GetAllPosts)
 		post.GET("/:postID", init.PostCtrl.GetPostById)
+		post.GET("/:postID/reply", init.PostCtrl.GetAllReplies)
 		post.PUT("/:postID", init.PostCtrl.UpdatePostData)
 		post.DELETE("/:postID", init.PostCtrl.DeletePost)
 

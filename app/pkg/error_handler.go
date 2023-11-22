@@ -21,6 +21,10 @@ func PanicException_(key string, message string) {
 	}
 }
 
+func CustomPanicException(statusCode int, message string, c *gin.Context) {
+	c.JSON(statusCode, BuildResponse_(constant.UnknownError.GetResponseStatus(), message, Null()))
+}
+
 func PanicException(responseKey constant.ResponseStatus) {
 	PanicException_(responseKey.GetResponseStatus(), responseKey.GetResponseMessage())
 }

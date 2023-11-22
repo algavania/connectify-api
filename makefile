@@ -7,3 +7,4 @@ init-dependency:
 	go get -u github.com/sirupsen/logrus
 	go get -u github.com/joho/godotenv
 	go get -u github.com/golang-jwt/jwt/v5
+	go get -u github.com/gin-contrib/cors

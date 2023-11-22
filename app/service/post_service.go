@@ -5,20 +5,21 @@ import (
 	dao "example/connectify/app/domain/dao/post"
 	"example/connectify/app/pkg"
 	repository "example/connectify/app/repository"
+	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
+	"github.com/jackc/pgx/v5/pgconn"
+	log "github.com/sirupsen/logrus"
 	"mime/multipart"
 	"net/http"
 	"path/filepath"
 	"strconv"
 	"time"
-
-	"github.com/gin-gonic/gin"
-	"github.com/gin-gonic/gin/binding"
-	"github.com/jackc/pgx/v5/pgconn"
-	log "github.com/sirupsen/logrus"
 )
 
 type PostService interface {
 	GetPostById(c *gin.Context)
+	GetAllPosts(c *gin.Context)
+	GetAllReplies(c *gin.Context)
 	AddPostData(c *gin.Context)
 	UpdatePostData(c *gin.Context)
 	DeletePost(c *gin.Context)
@@ -52,19 +53,23 @@ func (u PostServiceImpl) UpdatePostData(c *gin.Context) {
 	file4, err4 := c.FormFile("media4")
 
 	if err == nil {
-		data.Media1 = UploadFile(file, c)
+		media := UploadFile(file, c)
+		data.Media1 = &media
 	}
 
 	if err2 == nil {
-		data.Media2 = UploadFile(file2, c)
+		media := UploadFile(file2, c)
+		data.Media2 = &media
 	}
 
 	if err3 == nil {
-		data.Media3 = UploadFile(file3, c)
+		media := UploadFile(file3, c)
+		data.Media3 = &media
 	}
 
 	if err4 == nil {
-		data.Media4 = UploadFile(file4, c)
+		media := UploadFile(file4, c)
+		data.Media4 = &media
 	}
 
 	data.Content = c.PostForm("content")
@@ -93,6 +98,33 @@ func (u PostServiceImpl) GetPostById(c *gin.Context) {
 	c.JSON(http.StatusOK, pkg.BuildResponse(constant.Success, data))
 }
 
+func (u PostServiceImpl) GetAllPosts(c *gin.Context) {
+	defer pkg.PanicHandler(c)
+
+	log.Info("start to execute program get all posts")
+	data, err := u.postRepository.FindAllPosts()
+	if err != nil {
+		log.Error("Error happened when getting data from database. Error", err)
+		pkg.PanicException(constant.DataNotFound)
+	}
+
+	c.JSON(http.StatusOK, pkg.BuildResponse(constant.Success, data))
+}
+
+func (u PostServiceImpl) GetAllReplies(c *gin.Context) {
+	defer pkg.PanicHandler(c)
+
+	log.Info("start to execute program get all posts")
+	postID, _ := strconv.Atoi(c.Param("postID"))
+	data, err := u.postRepository.FindAllReplies(postID)
+	if err != nil {
+		log.Error("Error happened when getting data from database. Error", err)
+		pkg.PanicException(constant.DataNotFound)
+	}
+
+	c.JSON(http.StatusOK, pkg.BuildResponse(constant.Success, data))
+}
+
 func (u PostServiceImpl) AddPostData(c *gin.Context) {
 	defer pkg.PanicHandler(c)
 
@@ -108,25 +140,40 @@ func (u PostServiceImpl) AddPostData(c *gin.Context) {
 	file3, err3 := c.FormFile("media3")
 	file4, err4 := c.FormFile("media4")
 
+	length := len(request.Content)
+	if (length > 280 || length == 0) && (err == nil && err2 == nil && err3 == nil && err4 == nil) {
+		pkg.CustomPanicException(http.StatusBadRequest, "Post must be between 1 and 280 characters", c)
+		return
+	}
+
 	if err == nil {
-		request.Media1 = UploadFile(file, c)
+		media := UploadFile(file, c)
+		request.Media1 = &media
 	}
 
 	if err2 == nil {
-		request.Media2 = UploadFile(file2, c)
+		media := UploadFile(file2, c)
+		request.Media2 = &media
 	}
 
 	if err3 == nil {
-		request.Media3 = UploadFile(file3, c)
+		media := UploadFile(file3, c)
+		request.Media3 = &media
 	}
 
 	if err4 == nil {
-		request.Media4 = UploadFile(file4, c)
+		media := UploadFile(file4, c)
+		request.Media4 = &media
 	}
 
 	request.Content = c.PostForm("content")
-	userID, _ := strconv.Atoi(c.PostForm("user_id"))
-	request.UserID = userID
+	userID, tokenError := pkg.ExtractTokenID(c)
+	if tokenError != nil {
+		log.Error("Error happened when extracting token. Error", tokenError)
+		pkg.CustomPanicException(http.StatusUnauthorized, "Token invalid", c)
+		return
+	}
+	request.UserID = int(userID)
 	parentPostID, _ := strconv.Atoi(c.PostForm("parent_post_id"))
 	if parentPostID == 0 {
 		request.ParentPostID = nil
