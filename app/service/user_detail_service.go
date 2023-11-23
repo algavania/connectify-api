@@ -17,10 +17,25 @@ import (
 type UserDetailService interface {
 	GetUserById(c *gin.Context)
 	AddUserData(c *gin.Context)
+	GetAllUsers(c *gin.Context)
 }
 
 type UserDetailServiceImpl struct {
 	UserDetailRepository repository.UserDetailRepository
+}
+
+func (u UserDetailServiceImpl) GetAllUsers(c *gin.Context) {
+	defer pkg.PanicHandler(c)
+
+	log.Info("start to execute program get all users")
+
+	data, err := u.UserDetailRepository.FindAllUsers()
+	if err != nil {
+		log.Error("Error happened when getting data from database. Error", err)
+		pkg.PanicException(constant.DataNotFound)
+	}
+
+	c.JSON(http.StatusOK, pkg.BuildResponse(constant.Success, data))
 }
 
 func (u UserDetailServiceImpl) GetUserById(c *gin.Context) {
@@ -53,8 +68,23 @@ func (u UserDetailServiceImpl) AddUserData(c *gin.Context) {
 	}
 
 	request.Name = c.PostForm("name")
-	request.Description = c.PostForm("description")
-	request.Birthday, err = pkg.ParseTime(c.PostForm("birthday"))
+	description := c.PostForm("description")
+	if description != "" && description != pkg.Null() {
+		request.Description = &description
+	} else {
+		request.Description = nil
+	}
+	birthday := c.PostForm("birthday")
+	if birthday != "" && birthday != pkg.Null() {
+		parsedBirthday, err := pkg.ParseTime(birthday)
+		if err != nil {
+			log.Error("Error happened in date", err)
+			pkg.PanicException(constant.InvalidRequest)
+		}
+		request.Birthday = &parsedBirthday
+	} else {
+		request.Birthday = nil
+	}
 	if err != nil {
 		log.Error("Error happened in date", err)
 		pkg.PanicException(constant.InvalidRequest)

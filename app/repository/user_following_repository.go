@@ -7,58 +7,108 @@ import (
 )
 
 type UserFollowingRepository interface {
-	GetUserFollowing(id int) (dao.UserFollowing, error)
-	GetUserFollowers(id int) (dao.UserFollowing, error)
+	GetUserFollowing(id int) ([]dao.UserDetail, error)
+	GetUserFollowers(id int) ([]dao.UserDetail, error)
+	GetUserFollowingCount(id int) (int, error)
+	GetUserFollowersCount(id int) (int, error)
 	Follow(userFollowing *dao.UserFollowing) (dao.UserFollowing, error)
-	Unfollow(userFollowing *dao.UserFollowing) error
+	Unfollow(id int, currentUserId int) error
+	CheckHasFollowed(id int, currentUserId int) bool
 }
 
 type UserFollowingRepositoryImpl struct {
 	db *gorm.DB
 }
 
-func (u UserFollowingRepositoryImpl) GetUserFollowing(id int) (dao.UserFollowing, error) {
-	userFollowing := dao.UserFollowing{
-		UserID: id,
-	}
-	err := u.db.Find(&userFollowing).Error
+func (u UserFollowingRepositoryImpl) CheckHasFollowed(id int, currentUserId int) bool {
+	var count int64 = 0
+	log.Info("check has followed")
+	err := u.db.Model(&dao.UserFollowing{}).Where("user_id = ? AND followed_user_id = ?", currentUserId, id).Count(&count)
 	if err != nil {
 		log.Error("Got and error when find userFollowing by id. Error: ", err)
-		return dao.UserFollowing{}, err
+		return count > 0
 	}
-	return userFollowing, nil
+	return count > 0
 }
 
-func (u UserFollowingRepositoryImpl) GetUserFollowers(id int) (dao.UserFollowing, error) {
-	userFollowing := dao.UserFollowing{
-		FollowedUserID: id,
+func (u UserFollowingRepositoryImpl) GetUserFollowing(id int) ([]dao.UserDetail, error) {
+	users := []dao.UserDetail{}
+	userFollowings := []dao.UserFollowing{}
+	err := u.db.Model(&dao.UserFollowing{}).Where("user_id = ?", id).Find(&userFollowings).Error
+	if err != nil {
+		log.Error("Got and error when find userFollowings by id. Error: ", err)
+		return []dao.UserDetail{}, err
 	}
-	err := u.db.Find(&userFollowing).Error
+	for _, user := range userFollowings {
+		userDetail := dao.UserDetail{}
+		err := u.db.Model(&dao.UserDetail{}).Preload("User").Where("user_id = ?", user.ID).Find(&userDetail).Error
+		if err != nil {
+			log.Error("Got an error when counting comments. Error: ", err)
+			return []dao.UserDetail{}, err
+		}
+		users = append(users, userDetail)
+	}
+	return users, nil
+}
+
+func (u UserFollowingRepositoryImpl) GetUserFollowers(id int) ([]dao.UserDetail, error) {
+	users := []dao.UserDetail{}
+	userFollowings := []dao.UserFollowing{}
+	err := u.db.Model(&dao.UserFollowing{}).Where("followed_user_id = ?", id).Find(&userFollowings).Error
 	if err != nil {
 		log.Error("Got and error when find userFollowers by id. Error: ", err)
-		return dao.UserFollowing{}, err
+		return []dao.UserDetail{}, err
 	}
-	return userFollowing, nil
+	for _, user := range userFollowings {
+		userDetail := dao.UserDetail{}
+		err := u.db.Model(&dao.UserDetail{}).Preload("User").Where("user_id = ?", user.UserID).Find(&userDetail).Error
+		if err != nil {
+			log.Error("Got an error when counting comments. Error: ", err)
+			return []dao.UserDetail{}, err
+		}
+		users = append(users, userDetail)
+	}
+	return users, nil
+}
+
+func (u UserFollowingRepositoryImpl) GetUserFollowingCount(id int) (int, error) {
+	var count int64 = 0
+	err := u.db.Model(&dao.UserFollowing{}).Where("user_id = ?", id).Count(&count).Error
+	if err != nil {
+		log.Error("Got and error when find userFollowing by id. Error: ", err)
+		return int(count), err
+	}
+	return int(count), nil
+}
+
+func (u UserFollowingRepositoryImpl) GetUserFollowersCount(id int) (int, error) {
+	var count int64 = 0
+	err := u.db.Model(&dao.UserFollowing{}).Where("followed_user_id = ?", id).Count(&count).Error
+	if err != nil {
+		log.Error("Got and error when find userFollowers by id. Error: ", err)
+		return int(count), err
+	}
+	return int(count), nil
 }
 
 func (u UserFollowingRepositoryImpl) Follow(userFollowing *dao.UserFollowing) (dao.UserFollowing, error) {
-
-	data, err := u.GetUserFollowing(userFollowing.ID)
-	if err != nil {
-		err = u.db.Create(userFollowing).Error
+	following := dao.UserFollowing{}
+	u.db.Where("user_id = ? AND followed_user_id = ?", userFollowing.UserID, userFollowing.FollowedUserID).Find(&following)
+	if following.ID != 0 {
+		log.Error("Already followed")
+		return following, nil
 	} else {
-		userFollowing.CreatedAt = data.CreatedAt
-		err = u.db.Updates(userFollowing).Error
-	}
-	if err != nil {
-		log.Error("Got an error when saving userFollowing. Error: ", err)
-		return dao.UserFollowing{}, err
+		err := u.db.Create(userFollowing).Error
+		if err != nil {
+			log.Error("Got an error when saving userFollowing. Error: ", err)
+			return dao.UserFollowing{}, err
+		}
 	}
 	return *userFollowing, nil
 }
 
-func (u UserFollowingRepositoryImpl) Unfollow(userFollowing *dao.UserFollowing) error {
-	err := u.db.Unscoped().Delete(&dao.UserFollowing{}, userFollowing).Error
+func (u UserFollowingRepositoryImpl) Unfollow(id int, currentUserId int) error {
+	err := u.db.Unscoped().Where("user_id = ? AND followed_user_id = ?", currentUserId, id).Delete(&dao.UserFollowing{}).Error
 	if err != nil {
 		log.Error("Got an error when delete userFollowing. Error: ", err)
 		return err

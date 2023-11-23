@@ -9,6 +9,7 @@ import (
 type PostController interface {
 	AddPostData(c *gin.Context)
 	GetPostById(c *gin.Context)
+	GetPostByUserId(c *gin.Context)
 	GetAllPosts(c *gin.Context)
 	GetAllReplies(c *gin.Context)
 	UpdatePostData(c *gin.Context)
@@ -21,6 +22,10 @@ type PostControllerImpl struct {
 
 func (u PostControllerImpl) AddPostData(c *gin.Context) {
 	u.svc.AddPostData(c)
+}
+
+func (u PostControllerImpl) GetPostByUserId(c *gin.Context) {
+	u.svc.GetPostByUserId(c)
 }
 
 func (u PostControllerImpl) GetPostById(c *gin.Context) {

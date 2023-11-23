@@ -17,6 +17,7 @@ func Init(init *config.Initialization) *gin.Engine {
 	config.AllowAllOrigins = true
 	config.AllowHeaders = []string{"*"}
 	router.Use(cors.New(config))
+	router.Static("/public", "./public")
 
 	api := router.Group("/api")
 	{
@@ -26,12 +27,13 @@ func Init(init *config.Initialization) *gin.Engine {
 
 		user := api.Group("/user")
 		user.Use(middlewares.JwtAuthMiddleware())
-		user.GET("/:userID", init.UserCtrl.GetUserById)
+		user.GET("/:username", init.UserCtrl.GetUserByUsername)
 		user.PUT("/:userID", init.UserCtrl.UpdateUserData)
 		user.DELETE("/:userID", init.UserCtrl.DeleteUser)
 
 		userDetail := api.Group("/user-detail")
 		userDetail.Use(middlewares.JwtAuthMiddleware())
+		userDetail.GET("/all", init.UserDetailCtrl.GetAllUsers)
 		userDetail.POST("/:userID", init.UserDetailCtrl.AddUserData)
 		userDetail.GET("/:userID", init.UserDetailCtrl.GetUserById)
 
@@ -40,6 +42,7 @@ func Init(init *config.Initialization) *gin.Engine {
 		post.POST("", init.PostCtrl.AddPostData)
 		post.GET("", init.PostCtrl.GetAllPosts)
 		post.GET("/:postID", init.PostCtrl.GetPostById)
+		post.GET("/user/:userID", init.PostCtrl.GetPostByUserId)
 		post.GET("/:postID/reply", init.PostCtrl.GetAllReplies)
 		post.PUT("/:postID", init.PostCtrl.UpdatePostData)
 		post.DELETE("/:postID", init.PostCtrl.DeletePost)
@@ -62,6 +65,9 @@ func Init(init *config.Initialization) *gin.Engine {
 		userFollowing.POST("", init.UserFollowingCtrl.Follow)
 		userFollowing.GET("/:userID", init.UserFollowingCtrl.GetUserFollowing)
 		userFollowing.GET("/:userID/followers", init.UserFollowingCtrl.GetUserFollowers)
+		userFollowing.GET("/:userID/count", init.UserFollowingCtrl.GetUserFollowingCount)
+		userFollowing.GET("/:userID/followers/count", init.UserFollowingCtrl.GetUserFollowersCount)
+		userFollowing.GET("/:userID/check", init.UserFollowingCtrl.CheckHasFollowed)
 		userFollowing.DELETE("/:userID", init.UserFollowingCtrl.Unfollow)
 	}
 

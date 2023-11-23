@@ -9,10 +9,15 @@ import (
 type UserDetailController interface {
 	AddUserData(c *gin.Context)
 	GetUserById(c *gin.Context)
+	GetAllUsers(c *gin.Context)
 }
 
 type UserDetailControllerImpl struct {
 	svc service.UserDetailService
+}
+
+func (u UserDetailControllerImpl) GetAllUsers(c *gin.Context) {
+	u.svc.GetAllUsers(c)
 }
 
 func (u UserDetailControllerImpl) AddUserData(c *gin.Context) {

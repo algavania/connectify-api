@@ -17,10 +17,10 @@ import (
 
 func Init() *Initialization {
 	gormDB := ConnectToDB()
-	userRepositoryImpl := repository.UserRepositoryInit(gormDB)
+	userDetailRepositoryImpl := repository.UserDetailRepositoryInit(gormDB)
+	userRepositoryImpl := repository.UserRepositoryInit(gormDB, userDetailRepositoryImpl)
 	userServiceImpl := service.UserServiceInit(userRepositoryImpl)
 	userControllerImpl := controller.UserControllerInit(userServiceImpl)
-	userDetailRepositoryImpl := repository.UserDetailRepositoryInit(gormDB)
 	userDetailServiceImpl := service.UserDetailServiceInit(userDetailRepositoryImpl)
 	userDetailControllerImpl := controller.UserDetailControllerInit(userDetailServiceImpl)
 	postRepositoryImpl := repository.PostRepositoryInit(gormDB)

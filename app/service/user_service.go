@@ -15,7 +15,7 @@ import (
 )
 
 type UserService interface {
-	GetUserById(c *gin.Context)
+	GetUserByUsername(c *gin.Context)
 	AddUserData(c *gin.Context)
 	UpdateUserData(c *gin.Context)
 	DeleteUser(c *gin.Context)
@@ -57,13 +57,13 @@ func (u UserServiceImpl) UpdateUserData(c *gin.Context) {
 	c.JSON(http.StatusOK, pkg.BuildResponse(constant.Success, data))
 }
 
-func (u UserServiceImpl) GetUserById(c *gin.Context) {
+func (u UserServiceImpl) GetUserByUsername(c *gin.Context) {
 	defer pkg.PanicHandler(c)
 
 	log.Info("start to execute program get user by id")
-	userID, _ := strconv.Atoi(c.Param("userID"))
+	username := c.Param("username")
 
-	data, err := u.userRepository.FindUserById(userID)
+	data, err := u.userRepository.FindUserByUsername(username)
 	if err != nil {
 		log.Error("Error happened when getting data from database. Error", err)
 		pkg.PanicException(constant.DataNotFound)

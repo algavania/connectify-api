@@ -15,7 +15,8 @@ type UserRepository interface {
 }
 
 type UserRepositoryImpl struct {
-	db *gorm.DB
+	db             *gorm.DB
+	userDetailRepo UserDetailRepository
 }
 
 func (u UserRepositoryImpl) FindUserById(id int) (dao.User, error) {
@@ -59,6 +60,11 @@ func (u UserRepositoryImpl) Save(user *dao.User) (dao.User, error) {
 	log.Info("error in save: ", data.Email)
 	if err != nil {
 		err = u.db.Create(user).Error
+		userDetail := dao.UserDetail{
+			Name:   user.Username,
+			UserID: user.ID,
+		}
+		u.userDetailRepo.Save(&userDetail)
 	} else {
 		user.CreatedAt = data.CreatedAt
 		err = u.db.Updates(user).Error
@@ -79,9 +85,10 @@ func (u UserRepositoryImpl) DeleteUserById(id int) error {
 	return nil
 }
 
-func UserRepositoryInit(db *gorm.DB) *UserRepositoryImpl {
+func UserRepositoryInit(db *gorm.DB, userDetailRepo UserDetailRepository) *UserRepositoryImpl {
 	db.AutoMigrate(&dao.User{})
 	return &UserRepositoryImpl{
-		db: db,
+		db:             db,
+		userDetailRepo: userDetailRepo,
 	}
 }

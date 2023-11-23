@@ -8,7 +8,7 @@ import (
 
 type UserController interface {
 	AddUserData(c *gin.Context)
-	GetUserById(c *gin.Context)
+	GetUserByUsername(c *gin.Context)
 	UpdateUserData(c *gin.Context)
 	DeleteUser(c *gin.Context)
 	Login(c *gin.Context)
@@ -22,8 +22,8 @@ func (u UserControllerImpl) AddUserData(c *gin.Context) {
 	u.svc.AddUserData(c)
 }
 
-func (u UserControllerImpl) GetUserById(c *gin.Context) {
-	u.svc.GetUserById(c)
+func (u UserControllerImpl) GetUserByUsername(c *gin.Context) {
+	u.svc.GetUserByUsername(c)
 }
 
 func (u UserControllerImpl) UpdateUserData(c *gin.Context) {

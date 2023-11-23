@@ -18,6 +18,7 @@ import (
 
 type PostService interface {
 	GetPostById(c *gin.Context)
+	GetPostByUserId(c *gin.Context)
 	GetAllPosts(c *gin.Context)
 	GetAllReplies(c *gin.Context)
 	AddPostData(c *gin.Context)
@@ -73,7 +74,7 @@ func (u PostServiceImpl) UpdatePostData(c *gin.Context) {
 	}
 
 	data.Content = c.PostForm("content")
-	res, err := u.postRepository.Save(&data)
+	res, err := u.postRepository.Save(&data.Post)
 	if err != nil {
 		log.Error("Error happened when saving data to database. Error", err)
 		if pkg.HandleError(err.(*pgconn.PgError), c) {
@@ -103,6 +104,20 @@ func (u PostServiceImpl) GetAllPosts(c *gin.Context) {
 
 	log.Info("start to execute program get all posts")
 	data, err := u.postRepository.FindAllPosts()
+	if err != nil {
+		log.Error("Error happened when getting data from database. Error", err)
+		pkg.PanicException(constant.DataNotFound)
+	}
+
+	c.JSON(http.StatusOK, pkg.BuildResponse(constant.Success, data))
+}
+
+func (u PostServiceImpl) GetPostByUserId(c *gin.Context) {
+	defer pkg.PanicHandler(c)
+
+	log.Info("start to execute program get all posts")
+	userId, _ := strconv.Atoi(c.Param("userID"))
+	data, err := u.postRepository.FindPostByUserId(userId)
 	if err != nil {
 		log.Error("Error happened when getting data from database. Error", err)
 		pkg.PanicException(constant.DataNotFound)
