@@ -155,8 +155,10 @@ func (u PostServiceImpl) AddPostData(c *gin.Context) {
 	file3, err3 := c.FormFile("media3")
 	file4, err4 := c.FormFile("media4")
 
+	request.Content = c.PostForm("content")
+
 	length := len(request.Content)
-	if (length > 280 || length == 0) && (err == nil && err2 == nil && err3 == nil && err4 == nil) {
+	if (length > 280 || length == 0) && (file == nil && file2 == nil && file3 == nil && file4 == nil) {
 		pkg.CustomPanicException(http.StatusBadRequest, "Post must be between 1 and 280 characters", c)
 		return
 	}
@@ -181,7 +183,6 @@ func (u PostServiceImpl) AddPostData(c *gin.Context) {
 		request.Media4 = &media
 	}
 
-	request.Content = c.PostForm("content")
 	userID, tokenError := pkg.ExtractTokenID(c)
 	if tokenError != nil {
 		log.Error("Error happened when extracting token. Error", tokenError)
